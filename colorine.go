@@ -20,10 +20,8 @@ import (
 
 // A Logger handles the printing stuff. You can create one with NewLogger().
 type Logger struct {
-	// Prefix text colors.
+	// Prefix string to TextStyle mapping.
 	Prefixes Prefixes
-	// Used when the prefix is not found in Prefixes.
-	DefaultStyle TextStyle
 }
 
 // A TextStyle represents the style that strings are displayed with. Consists
@@ -39,6 +37,7 @@ type textColor struct {
 }
 
 // A Prefixes is a map of prefix string to TextStyle. Prefix strings of log lines are colored according to this mapping.
+// The TextStyle for an empty prefix ("") is used for default TextStyle.
 type Prefixes map[string]TextStyle
 
 // Text color constants. Use these to build a TextStyle.
@@ -71,30 +70,35 @@ var (
 	Notice  = TextStyle{Blue, None}
 	Warn    = TextStyle{Yellow, None}
 	Error   = TextStyle{Red, None}
+	Default = TextStyle{Green, None}
 )
 
 // NewLogger creates a new Logger. prefixes is a prefix-string-to-text-style
-// table. The log prefix is colored using this table. If no entry is found in
+// mapping. The log prefix is colored using this table. If no entry is found in
 // prefixes, defaultStyle is used.
 //
 // By default, no prefix is registered to any text style.
 func NewLogger(prefixes Prefixes, defaultStyle TextStyle) *Logger {
-	return &Logger{prefixes, defaultStyle}
+	prefixes[""] = defaultStyle
+	return &Logger{prefixes}
 }
 
 // Log prints messages to console. prefix is colored using the logger.prefixes
 // table.
 func (logger *Logger) Log(prefix, message string) {
-	textColor, ok := logger.Prefixes[prefix]
+	textStyle, ok := logger.Prefixes[prefix]
 	if !ok {
-		textColor = logger.DefaultStyle
+		textStyle, ok = logger.Prefixes[""]
+		if !ok {
+			textStyle = Default
+		}
 	}
 
 	ct.ChangeColor(
-		textColor.Foreground.Color,
-		textColor.Foreground.Bright,
-		textColor.Background.Color,
-		textColor.Background.Bright,
+		textStyle.Foreground.Color,
+		textStyle.Foreground.Bright,
+		textStyle.Background.Color,
+		textStyle.Background.Bright,
 	)
 
 	fmt.Printf("%10s", prefix)
