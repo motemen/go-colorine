@@ -1,12 +1,12 @@
 // Package colorine provides a simple feature to print messages to console.
 //
 // A log line consists of a prefix and a message. The prefix is colored by its
-// content (for example below, "create" is green, "exists" is blue, and "error"
+// content (for example below, "create" is green, "exist" is blue, and "error"
 // is red, and so on.) and the message is not colored.
 //	$ your_program
 //	    create path/to/file
-//	    exists path/to/another/file
-//	     error something went wrong
+//	     exist path/to/another/file
+//	     error something went wrong!
 //
 // By default, no prefix color is defined. You must specify prefix-to-color
 // mapping when you create a Logger. See the Logger's example.
@@ -18,9 +18,11 @@ import (
 	"github.com/daviddengcn/go-colortext"
 )
 
-// A Logger handles the printing stuff. Create one with NewLogger().
+// A Logger handles the printing stuff. You can create one with NewLogger().
 type Logger struct {
-	Prefixes     map[string]TextStyle
+	// Prefix text colors.
+	Prefixes Prefixes
+	// Used when the prefix is not found in Prefixes.
 	DefaultStyle TextStyle
 }
 
@@ -35,6 +37,9 @@ type textColor struct {
 	Color  ct.Color
 	Bright bool
 }
+
+// A Prefixes is a map of prefix string to TextStyle. Prefix strings of log lines are colored according to this mapping.
+type Prefixes map[string]TextStyle
 
 // Text color constants. Use these to build a TextStyle.
 var (
@@ -68,12 +73,12 @@ var (
 	Error   = TextStyle{Red, None}
 )
 
-// NewLogger creates a new Logger.  prefixes is a prefix-string-to-text-style
+// NewLogger creates a new Logger. prefixes is a prefix-string-to-text-style
 // table. The log prefix is colored using this table. If no entry is found in
 // prefixes, defaultStyle is used.
 //
 // By default, no prefix is registered to any text style.
-func NewLogger(prefixes map[string]TextStyle, defaultStyle TextStyle) *Logger {
+func NewLogger(prefixes Prefixes, defaultStyle TextStyle) *Logger {
 	return &Logger{prefixes, defaultStyle}
 }
 

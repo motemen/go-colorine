@@ -1,17 +1,18 @@
-package colorine
+package colorine_test
 
+import "github.com/motemen/go-colorine"
 import "testing"
 
 func TestLog(t *testing.T) {
-	logger := NewLogger(
-		map[string]TextStyle{
-			"verbose": Verbose,
-			"info":    Info,
-			"notice":  Notice,
-			"warn":    Warn,
-			"error":   Error,
+	logger := colorine.NewLogger(
+		colorine.Prefixes{
+			"verbose": colorine.Verbose,
+			"info":    colorine.Info,
+			"notice":  colorine.Notice,
+			"warn":    colorine.Warn,
+			"error":   colorine.Error,
 		},
-		Info,
+		colorine.Info,
 	)
 
 	logger.Log("verbose", "shows this color")
@@ -22,20 +23,20 @@ func TestLog(t *testing.T) {
 }
 
 func ExampleLogger() {
-	logger := NewLogger(
-		map[string]TextStyle{
+	logger := colorine.NewLogger(
+		colorine.Prefixes{
 			// Using colorine's predefined TextStyles
-			"create": Info,
-			"exists": Notice,
+			"create": colorine.Info,
+			"exist":  colorine.Notice,
 			// Or specify your own
-			"debug": TextStyle{White, None},
-			"error": TextStyle{BrightRed, White},
+			"debug": colorine.TextStyle{colorine.White, colorine.None},
+			"error": colorine.TextStyle{colorine.BrightRed, colorine.White},
 		},
 		// The default prefix color
-		TextStyle{Green, None},
+		colorine.TextStyle{colorine.Green, colorine.None},
 	)
 
 	logger.Log("create", "path/to/file")
-	logger.Log("exists", "path/to/another/file")
-	logger.Log("error", "something went wrong")
+	logger.Log("exist", "path/to/another/file")
+	logger.Log("error", "something went wrong!")
 }
