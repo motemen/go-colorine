@@ -42,6 +42,7 @@ func (logger *Logger) getOutput() io.Writer {
 func (logger *Logger) SetOutput(w io.Writer) {
 	logger.mu.Lock()
 	defer logger.mu.Unlock()
+	ct.Writer = w
 	logger.output = w
 }
 
@@ -115,6 +116,11 @@ func (logger *Logger) Log(prefix, message string) {
 		}
 	}
 
+	out := logger.getOutput()
+
+	logger.mu.Lock()
+	defer logger.mu.Unlock()
+
 	ct.ChangeColor(
 		textStyle.Foreground.Color,
 		textStyle.Foreground.Bright,
@@ -122,10 +128,6 @@ func (logger *Logger) Log(prefix, message string) {
 		textStyle.Background.Bright,
 	)
 
-	out := logger.getOutput()
-
-	logger.mu.Lock()
-	defer logger.mu.Unlock()
 	fmt.Fprintf(out, "%10s", prefix)
 
 	ct.ResetColor()
