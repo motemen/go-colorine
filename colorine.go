@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 
 	"github.com/daviddengcn/go-colortext"
 )
@@ -25,17 +26,22 @@ type Logger struct {
 	// Prefix string to TextStyle mapping.
 	Prefixes Prefixes
 	output   io.Writer
+	mu       sync.RWMutex
 }
 
 func (logger *Logger) getOutput() io.Writer {
+	logger.mu.RLock()
+	defer logger.mu.RUnlock()
 	if logger.output == nil {
-		logger.output = os.Stdout
+		return os.Stdout
 	}
 	return logger.output
 }
 
 // SetOutput sets the output destination for the logger.
 func (logger *Logger) SetOutput(w io.Writer) {
+	logger.mu.Lock()
+	defer logger.mu.Unlock()
 	logger.output = w
 }
 
@@ -117,6 +123,9 @@ func (logger *Logger) Log(prefix, message string) {
 	)
 
 	out := logger.getOutput()
+
+	logger.mu.Lock()
+	defer logger.mu.Unlock()
 	fmt.Fprintf(out, "%10s", prefix)
 
 	ct.ResetColor()
