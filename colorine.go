@@ -14,6 +14,9 @@ package colorine
 
 import (
 	"fmt"
+	"io"
+	"os"
+	"sync"
 
 	"github.com/daviddengcn/go-colortext"
 )
@@ -22,6 +25,25 @@ import (
 type Logger struct {
 	// Prefix string to TextStyle mapping.
 	Prefixes Prefixes
+	output   io.Writer
+	mu       sync.RWMutex
+}
+
+func (logger *Logger) getOutput() io.Writer {
+	logger.mu.RLock()
+	defer logger.mu.RUnlock()
+	if logger.output == nil {
+		return os.Stdout
+	}
+	return logger.output
+}
+
+// SetOutput sets the output destination for the logger.
+func (logger *Logger) SetOutput(w io.Writer) {
+	logger.mu.Lock()
+	defer logger.mu.Unlock()
+	ct.Writer = w
+	logger.output = w
 }
 
 // A TextStyle represents the style that strings are displayed with. Consists
@@ -80,7 +102,7 @@ var (
 // By default, no prefix is registered to any text style.
 func NewLogger(prefixes Prefixes, defaultStyle TextStyle) *Logger {
 	prefixes[""] = defaultStyle
-	return &Logger{prefixes}
+	return &Logger{Prefixes: prefixes, output: os.Stdout}
 }
 
 // Log prints messages to console. prefix is colored using the logger.prefixes
@@ -94,6 +116,11 @@ func (logger *Logger) Log(prefix, message string) {
 		}
 	}
 
+	out := logger.getOutput()
+
+	logger.mu.Lock()
+	defer logger.mu.Unlock()
+
 	ct.ChangeColor(
 		textStyle.Foreground.Color,
 		textStyle.Foreground.Bright,
@@ -101,9 +128,9 @@ func (logger *Logger) Log(prefix, message string) {
 		textStyle.Background.Bright,
 	)
 
-	fmt.Printf("%10s", prefix)
+	fmt.Fprintf(out, "%10s", prefix)
 
 	ct.ResetColor()
 
-	fmt.Printf(" %s\n", message)
+	fmt.Fprintf(out, " %s\n", message)
 }
